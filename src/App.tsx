@@ -96,6 +96,7 @@ import {
   ThumbsUp,
   Trash2,
   TrendingUp,
+  Trophy,
   Tv,
   Upload,
   User,
@@ -142,6 +143,11 @@ import VexoraChat from "./components/VexoraChat";
 import VexoraMeet from "./components/VexoraMeet";
 import MyAccountSection from "./components/MyAccountSection";
 import { OwnerControlCenter } from "./components/OwnerControlCenter";
+import GamingAccountsModal from "./components/GamingAccountsModal";
+import GamingArena from "./components/GamingArena";
+import TournamentsHub from "./components/TournamentsHub";
+import GamingHub from "./components/GamingHub";
+import LiveActivityFeed from "./components/LiveActivityFeed";
 import {
   IncomingCallBanner,
   IncomingCallData,
@@ -4322,7 +4328,12 @@ export default function App() {
     | "chat"
     | "meet"
     | "my-account"
+    | "gaming-hub"
+    | "games-arena"
+    | "tournaments"
+    | "activity"
   >("feed");
+  const [isGamingAccountsOpen, setIsGamingAccountsOpen] = useState(false);
   const [initialChatUserId, setInitialChatUserId] = useState<string | null>(
     null,
   );
@@ -5762,8 +5773,8 @@ export default function App() {
               <span className="text-[9px] font-mono tracking-[0.35em] text-cyan-400/90 font-bold uppercase xs:hidden">
                 NETWORK
               </span>
-              <span className="text-[8px] font-mono text-zinc-400 uppercase tracking-wider hidden xs:inline">
-                {language === "ar" ? "الشبكة اللامركزية الذكية" : "DECENTRALIZED NEURAL GRID"}
+              <span className="text-[8px] font-mono text-cyan-400/90 uppercase tracking-wider hidden xs:inline font-bold">
+                {language === "ar" ? "تواصل • العب • تنافس" : "CONNECT • PLAY • COMPETE"}
               </span>
             </div>
           </div>
@@ -5789,6 +5800,18 @@ export default function App() {
 
         {/* Right Controls: Language, Sound, Owner Command & Profile */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* PC Gaming Accounts Link Matrix Button */}
+          <button
+            id="header-gaming-accounts-btn"
+            type="button"
+            onClick={() => setIsGamingAccountsOpen(true)}
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500/15 to-blue-600/15 hover:from-cyan-500/25 hover:to-blue-600/25 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+            title={language === "ar" ? "ربط حسابات الألعاب (Steam, Discord, Battle.net, Riot)" : "Link PC Gaming IDs (Steam, Discord, Battle.net, Riot)"}
+          >
+            <Gamepad2 className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <span>{language === "ar" ? "حسابات الألعاب" : "Gaming Matrix"}</span>
+          </button>
+
           {/* Language Switcher */}
           <button
             id="header-language-toggle"
@@ -5881,9 +5904,9 @@ export default function App() {
           </div>
           <div className="w-8 h-px bg-white/10 mb-1" />
 
-          {/* 1 - Public */}
+          {/* 1 - Home / Global Feed */}
           <DockItem
-            icon={<Globe className="w-6 h-6 outline-none" />}
+            icon={<Home className="w-6 h-6 outline-none" />}
             active={
               activeGrid === "public" &&
               currentView === "feed" &&
@@ -5894,26 +5917,10 @@ export default function App() {
               setCurrentView("feed");
               setSelectedProfileId(null);
             }}
-            label={language === "ar" ? "1. عام" : "1. Public"}
+            label={language === "ar" ? "1. الرئيسية" : "1. Feed"}
           />
-          {/* 2 - Message */}
-          <DockItem
-            icon={<MessageSquare className="w-6 h-6 outline-none" />}
-            active={currentView === "messages"}
-            onClick={() => {
-              setCurrentView("messages");
-              setSelectedProfileId(null);
-            }}
-            label={language === "ar" ? "2. الرسائل" : "2. Message"}
-          />
-          {/* 3 - Vexora AI */}
-          <DockItem
-            icon={<Bot className="w-6 h-6 outline-none" />}
-            active={showVexoraAiSoon}
-            onClick={handleVexoraAiClick}
-            label={language === "ar" ? "3. Vexora AI" : "3. Vexora AI"}
-          />
-          {/* 4 - COMMUNITY */}
+
+          {/* 2 - Gaming Communities */}
           <DockItem
             icon={<Zap className="w-6 h-6" />}
             active={currentView === "communities"}
@@ -5921,9 +5928,76 @@ export default function App() {
               setCurrentView("communities");
               setSelectedProfileId(null);
             }}
-            label={language === "ar" ? "4. المجتمعات" : "4. COMMUNITY"}
+            label={language === "ar" ? "2. المجتمعات" : "2. Communities"}
           />
-          {/* 5 - SAVED */}
+
+          {/* 3 - Gaming Hub */}
+          <DockItem
+            icon={<Gamepad2 className="w-6 h-6 text-cyan-400" />}
+            active={currentView === "gaming-hub"}
+            onClick={() => {
+              setCurrentView("gaming-hub");
+              setSelectedProfileId(null);
+            }}
+            label={language === "ar" ? "3. مركز الألعاب" : "3. Gaming Hub"}
+          />
+
+          {/* 4 - Strategy Arena */}
+          <DockItem
+            icon={<Flame className="w-6 h-6 text-cyan-400" />}
+            active={currentView === "games-arena"}
+            onClick={() => {
+              setCurrentView("games-arena");
+              setSelectedProfileId(null);
+            }}
+            label={language === "ar" ? "4. ساحة الألعاب" : "4. Strategy Arena"}
+          />
+
+          {/* 5 - Competitive Tournaments */}
+          <DockItem
+            icon={<Trophy className="w-6 h-6 text-yellow-400" />}
+            active={currentView === "tournaments"}
+            onClick={() => {
+              setCurrentView("tournaments");
+              setSelectedProfileId(null);
+            }}
+            label={language === "ar" ? "5. دوري البطولات" : "5. Tournaments"}
+          />
+
+          {/* 6 - Live Activity */}
+          <DockItem
+            icon={<Activity className="w-6 h-6 text-emerald-400" />}
+            active={currentView === "activity"}
+            onClick={() => {
+              setCurrentView("activity");
+              setSelectedProfileId(null);
+            }}
+            label={language === "ar" ? "6. النشاط الحي" : "6. Live Activity"}
+          />
+
+          {/* 7 - Friends */}
+          <DockItem
+            icon={<UserPlus className="w-6 h-6" />}
+            active={currentView === "friends"}
+            onClick={() => {
+              setCurrentView("friends");
+              setSelectedProfileId(null);
+            }}
+            label={language === "ar" ? "7. الأصدقاء" : "7. Friends"}
+          />
+
+          {/* 8 - Messages */}
+          <DockItem
+            icon={<MessageSquare className="w-6 h-6 outline-none" />}
+            active={currentView === "messages"}
+            onClick={() => {
+              setCurrentView("messages");
+              setSelectedProfileId(null);
+            }}
+            label={language === "ar" ? "8. الرسائل" : "8. Messages"}
+          />
+
+          {/* 9 - Saved Posts */}
           <DockItem
             icon={<Bookmark className="w-6 h-6" />}
             active={currentView === "saved"}
@@ -5931,9 +6005,10 @@ export default function App() {
               setCurrentView("saved");
               setSelectedProfileId(null);
             }}
-            label={language === "ar" ? "5. المحفوظات" : "5. SAVED"}
+            label={language === "ar" ? "9. المحفوظات" : "9. Saved"}
           />
-          {/* 6 - My Account */}
+
+          {/* 10 - User Profile */}
           <DockItem
             icon={<User className="w-6 h-6" />}
             active={currentView === "my-account"}
@@ -5941,7 +6016,7 @@ export default function App() {
               setCurrentView("my-account");
               setSelectedProfileId(null);
             }}
-            label={language === "ar" ? "6. حسابي" : "6. My Account"}
+            label={language === "ar" ? "10. حسابي" : "10. Profile"}
           />
           <div className="w-8 h-px bg-white/10 my-1" />
 
@@ -6602,11 +6677,47 @@ export default function App() {
                 onOpenOwnerConsole={() => setShowConsole(true)}
                 onOpenDataVault={() => setIsDataVaultOpen(true)}
                 onOpenVoiceSettings={() => setIsVoiceSettingsOpen(true)}
+                onOpenGamingAccounts={() => setIsGamingAccountsOpen(true)}
                 isOwner={isOwner}
                 userPostCount={
                   posts.filter((p) => p.author === currentUser?.name).length
                 }
                 userSavedCount={currentUser?.savedPostIds?.length || 0}
+              />
+            )}
+
+            {/* Gaming Hub */}
+            {currentView === "gaming-hub" && (
+              <GamingHub
+                currentUser={currentUser}
+                language={language}
+                onNavigateToArena={() => setCurrentView("games-arena")}
+                onNavigateToTournaments={() => setCurrentView("tournaments")}
+              />
+            )}
+
+            {/* Strategy Arena (Chess, Connect Four, Tic-Tac-Toe) */}
+            {currentView === "games-arena" && (
+              <GamingArena
+                currentUser={currentUser}
+                language={language}
+              />
+            )}
+
+            {/* Competitive Tournaments (Round Robin League) */}
+            {currentView === "tournaments" && (
+              <TournamentsHub
+                currentUser={currentUser}
+                language={language}
+              />
+            )}
+
+            {/* Live Activity & Achievements Pulse */}
+            {currentView === "activity" && (
+              <LiveActivityFeed
+                currentUser={currentUser}
+                language={language}
+                onChallengePlayer={() => setCurrentView("games-arena")}
               />
             )}
 
@@ -7342,103 +7453,185 @@ export default function App() {
           </div>
         </main>
 
-        {/* Neural Network Contacts */}
-        <aside className="w-[320px] hidden xl:flex flex-col p-6 bg-black/40 backdrop-blur-md overflow-y-auto border-l border-white/5 scrollbar-hide">
-          <div className="flex items-center justify-between text-white/40 mb-8 px-2 font-mono uppercase text-[10px] tracking-[0.2em]">
-            <span>Neural Nodes</span>
-            <div className="flex gap-4">
-              <Search
-                onClick={() => setShowSidebarSearch(!showSidebarSearch)}
-                className={`w-3.5 h-3.5 cursor-pointer transition-colors ${showSidebarSearch ? "text-[#38bdf8]" : "hover:text-white"}`}
-              />
-              <Activity className="w-3.5 h-3.5 cursor-pointer hover:text-white" />
+        {/* Right Sidebar: Gaming Pulse, Friends, Tournaments & Communities */}
+        <aside className="w-[320px] hidden xl:flex flex-col p-5 bg-[#090d18]/90 backdrop-blur-md overflow-y-auto border-l border-white/5 scrollbar-hide space-y-6">
+          {/* Header & Search */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-white/50 px-1 font-mono uppercase text-[10px] tracking-[0.2em]">
+              <span className="flex items-center gap-1.5 text-cyan-400 font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                {language === "ar" ? "رادار الألعاب المباشر" : "Gaming Live Radar"}
+              </span>
+              <div className="flex items-center gap-2">
+                <Search
+                  onClick={() => setShowSidebarSearch(!showSidebarSearch)}
+                  className={`w-3.5 h-3.5 cursor-pointer transition-colors ${showSidebarSearch ? "text-cyan-400" : "hover:text-white"}`}
+                />
+              </div>
+            </div>
+
+            <AnimatePresence>
+              {showSidebarSearch && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="relative"
+                >
+                  <input
+                    type="text"
+                    placeholder={language === "ar" ? "بحث عن لاعب أو لعبة..." : "Search players or games..."}
+                    value={sidebarSearchQuery}
+                    onChange={(e) => setSidebarSearchQuery(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 h-9 rounded-xl pr-8 pl-3 text-[10px] font-mono tracking-wider text-white focus:outline-none focus:border-cyan-500/50"
+                  />
+                  <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" />
+                  {sidebarSearchQuery && (
+                    <button
+                      onClick={() => setSidebarSearchQuery("")}
+                      className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white text-xs font-mono"
+                    >
+                      ×
+                    </button>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Quick Arena Challenge Card */}
+          <div className="p-4 rounded-2xl bg-gradient-to-tr from-cyan-500/10 via-purple-600/10 to-transparent border border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.1)] space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-300 font-bold flex items-center gap-1.5">
+                <Flame className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+                {language === "ar" ? "ساحة الألعاب الفورية" : "Quick Combat Arena"}
+              </span>
+              <span className="px-1.5 py-0.2 rounded text-[8px] font-mono bg-cyan-500/20 text-cyan-300">
+                LIVE
+              </span>
+            </div>
+            <p className="text-[11px] text-white/60 font-mono leading-relaxed">
+              {language === "ar"
+                ? "العب الشطرنج، رباعية الألوان، أو إكس-أو وتحدى الروبوت الذكي أو أصدقائك."
+                : "Play Chess, Connect Four, or Tic-Tac-Toe vs Cyber Bot or friends."}
+            </p>
+            <button
+              onClick={() => {
+                setCurrentView("games-arena");
+                setSelectedProfileId(null);
+              }}
+              className="w-full py-2 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-[10px] font-mono uppercase font-black tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <Play className="w-3 h-3" />
+              <span>{language === "ar" ? "دخول الساحة الآن" : "Enter Arena"}</span>
+            </button>
+          </div>
+
+          {/* 1. Online Friends & Active Gaming Sessions */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-white/40 px-1">
+              <span>{language === "ar" ? "الأصدقاء المتصلون" : "Online Friends"}</span>
+              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                {Object.keys(MOCK_PROFILES).length}
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {Object.values(MOCK_PROFILES)
+                .slice(0, 4)
+                .map((profile, i) => {
+                  const games = ["Valorant", "CS2", "Rocket League", "Chess Arena"];
+                  const ranks = ["Ascendant II", "15.2k ELO", "Champ 2", "1,520 MMR"];
+                  return (
+                    <button
+                      key={profile.id}
+                      onClick={() => handleProfileClick(profile.name)}
+                      className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-white/5 transition-all text-left group border border-transparent hover:border-white/5"
+                    >
+                      <div className="flex items-center gap-2.5 overflow-hidden">
+                        <div className="relative flex-shrink-0">
+                          <img
+                            src={profile.avatar}
+                            className="w-9 h-9 rounded-xl object-cover border border-white/10"
+                            alt=""
+                          />
+                          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-black" />
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <span className="font-bold text-xs truncate text-white/80 group-hover:text-cyan-300">
+                            {profile.name}
+                          </span>
+                          <span className="text-[9px] font-mono text-cyan-400/80 truncate">
+                            Playing {games[i % games.length]}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-mono text-white/30 hidden sm:inline">
+                        {ranks[i % ranks.length]}
+                      </span>
+                    </button>
+                  );
+                })}
             </div>
           </div>
 
-          <AnimatePresence>
-            {showSidebarSearch && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mb-6 relative"
-              >
-                <input
-                  type="text"
-                  placeholder="البحث في العقد... / Search nodes..."
-                  value={sidebarSearchQuery}
-                  onChange={(e) => setSidebarSearchQuery(e.target.value)}
-                  className="w-full bg-white/5 border border-white/5 h-10 rounded-xl pr-9 pl-3 text-[10px] font-mono tracking-widest uppercase focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.08] placeholder:text-white/10 text-white text-right dir-rtl"
-                />
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-white/20" />
-                {sidebarSearchQuery && (
-                  <button
-                    onClick={() => setSidebarSearchQuery("")}
-                    style={{ left: "8px" }}
-                    className="absolute top-1/2 -translate-y-1/2 text-[11px] text-white/30 hover:text-white font-mono"
-                  >
-                    ×
-                  </button>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* 2. Upcoming Tournaments */}
+          <div className="space-y-3 pt-3 border-t border-white/5">
+            <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-white/40 px-1">
+              <span>{language === "ar" ? "بطولات الدوري القادمة" : "Upcoming Tournaments"}</span>
+              <Trophy className="w-3.5 h-3.5 text-yellow-400" />
+            </div>
 
-          <div className="space-y-4">
-            {(() => {
-              const filteredNodes = Object.values(MOCK_PROFILES)
-                .filter((p) => !deletedUserIds.includes(p.id))
-                .filter((p) => {
-                  if (!sidebarSearchQuery.trim()) return true;
-                  const q = sidebarSearchQuery.toLowerCase();
-                  return (
-                    p.name.toLowerCase().includes(q) ||
-                    p.handle.toLowerCase().includes(q) ||
-                    (p.bio && p.bio.toLowerCase().includes(q))
-                  );
-                });
+            <div
+              onClick={() => {
+                setCurrentView("tournaments");
+                setSelectedProfileId(null);
+              }}
+              className="p-3 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-yellow-500/30 transition-all cursor-pointer space-y-1.5 group"
+            >
+              <div className="flex items-center justify-between text-[10px] font-mono">
+                <span className="text-yellow-400 font-bold">Round Robin League S1</span>
+                <span className="text-emerald-400 font-black">$10,000</span>
+              </div>
+              <p className="text-xs font-black text-white group-hover:text-cyan-300 truncate">
+                Cyber Vortex vs Obsidian Shadows
+              </p>
+              <span className="text-[9px] font-mono text-white/40 block">
+                Round 8 • Map 3 Decider (Live Now)
+              </span>
+            </div>
+          </div>
 
-              if (filteredNodes.length === 0) {
-                return (
-                  <div className="text-center py-8">
-                    <p className="text-[10px] font-mono uppercase tracking-widest text-red-400">
-                      لا توجد عقد مطابقة
-                    </p>
-                  </div>
-                );
-              }
+          {/* 3. Trending Games */}
+          <div className="space-y-3 pt-3 border-t border-white/5">
+            <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-white/40 px-1">
+              <span>{language === "ar" ? "الألعاب الأكثر نشاطاً" : "Trending Games"}</span>
+              <Gamepad2 className="w-3.5 h-3.5 text-cyan-400" />
+            </div>
 
-              return filteredNodes.map((profile) => (
-                <button
-                  key={profile.id}
-                  onClick={() => handleProfileClick(profile.name)}
-                  className="w-full flex items-center gap-4 p-3 rounded-2xl hover:bg-white/5 transition-all text-left group"
+            <div className="space-y-1.5">
+              {[
+                { name: "Valorant", players: "1.4M playing", tag: "FPS" },
+                { name: "Counter-Strike 2", players: "1.2M playing", tag: "FPS" },
+                { name: "Apex Legends", players: "850K playing", tag: "BR" },
+              ].map((g, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => {
+                    setCurrentView("gaming-hub");
+                    setSelectedProfileId(null);
+                  }}
+                  className="flex items-center justify-between p-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer text-xs font-mono text-white/70 hover:text-white"
                 >
-                  <div className="relative flex-shrink-0">
-                    <img
-                      src={profile.avatar}
-                      className="w-10 h-10 rounded-2xl object-cover opacity-60 group-hover:opacity-100 transition-opacity grayscale group-hover:grayscale-0"
-                      alt=""
-                    />
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-purple-500 rounded-full border-2 border-black" />
+                  <div className="flex items-center gap-2">
+                    <span className="text-white/30 text-[10px]">#{idx + 1}</span>
+                    <span className="font-bold">{g.name}</span>
                   </div>
-                  <div className="flex flex-col overflow-hidden">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs truncate text-white/60 group-hover:text-white">
-                        {profile.name}
-                      </span>
-                      {currentUser?.friendIds?.includes(profile.id) && (
-                        <Zap className="w-2 h-2 text-emerald-400" />
-                      )}
-                    </div>
-                    <span className="text-[10px] text-white/20 font-mono flex items-center gap-1">
-                      <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
-                      Active Link
-                    </span>
-                  </div>
-                </button>
-              ));
-            })()}
+                  <span className="text-[9px] text-cyan-400">{g.players}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </aside>
       </div>
@@ -7759,6 +7952,14 @@ export default function App() {
         language={language}
       />
 
+      {/* PC Gaming Account Matrix Modal */}
+      <GamingAccountsModal
+        isOpen={isGamingAccountsOpen}
+        onClose={() => setIsGamingAccountsOpen(false)}
+        currentUser={currentUser}
+        language={language}
+      />
+
       <div className="fixed bottom-8 right-8 z-[100] flex flex-col gap-3">
         <AnimatePresence>
           {activeCall && (currentView !== "messages" || isCallMinimized) && (
@@ -7821,7 +8022,7 @@ export default function App() {
           aria-label="Mobile Navigation"
           className="xl:hidden fixed bottom-0 left-0 right-0 sm:bottom-4 sm:left-1/2 sm:-translate-x-1/2 sm:w-full sm:max-w-xl md:max-w-2xl z-40 bg-[#0c091d]/95 sm:bg-[#0c091d]/90 backdrop-blur-2xl border-t sm:border border-white/10 sm:rounded-2xl px-3 py-2 flex items-center justify-around shadow-[0_-5px_25px_rgba(0,0,0,0.6)] sm:shadow-[0_10px_30px_rgba(0,0,0,0.8)] transition-all"
         >
-          {/* 1 - Public */}
+          {/* 1 - Public Feed */}
           <button
             id="mobile-nav-public"
             type="button"
@@ -7830,21 +8031,81 @@ export default function App() {
               setCurrentView("feed");
               setSelectedProfileId(null);
             }}
-            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+            className={`flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer ${
               activeGrid === "public" &&
               currentView === "feed" &&
               !selectedProfileId
-                ? "text-purple-400 bg-purple-500/20 font-bold shadow-[inset_0_0_10px_rgba(168,85,247,0.3)] ring-1 ring-purple-500/30"
+                ? "text-cyan-400 bg-cyan-500/20 font-bold shadow-[inset_0_0_10px_rgba(6,182,212,0.3)] ring-1 ring-cyan-500/30"
                 : "text-white/50 hover:text-white hover:bg-white/5"
             }`}
           >
-            <Globe className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <Home className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span className="text-[9px] sm:text-[10px] font-mono tracking-wider">
-              {language === "ar" ? "عام" : "Public"}
+              {language === "ar" ? "الرئيسية" : "Feed"}
             </span>
           </button>
 
-          {/* 2 - Message */}
+          {/* 2 - Gaming Hub */}
+          <button
+            id="mobile-nav-gaming-hub"
+            type="button"
+            onClick={() => {
+              setCurrentView("gaming-hub");
+              setSelectedProfileId(null);
+            }}
+            className={`flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer ${
+              currentView === "gaming-hub"
+                ? "text-cyan-400 bg-cyan-500/20 font-bold shadow-[inset_0_0_10px_rgba(6,182,212,0.3)] ring-1 ring-cyan-500/30"
+                : "text-white/50 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Gamepad2 className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="text-[9px] sm:text-[10px] font-mono tracking-wider">
+              {language === "ar" ? "الألعاب" : "Games"}
+            </span>
+          </button>
+
+          {/* 3 - Strategy Arena */}
+          <button
+            id="mobile-nav-arena"
+            type="button"
+            onClick={() => {
+              setCurrentView("games-arena");
+              setSelectedProfileId(null);
+            }}
+            className={`flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer ${
+              currentView === "games-arena"
+                ? "text-cyan-400 bg-cyan-500/20 font-bold shadow-[inset_0_0_10px_rgba(6,182,212,0.3)] ring-1 ring-cyan-500/30"
+                : "text-white/50 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Flame className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="text-[9px] sm:text-[10px] font-mono tracking-wider">
+              {language === "ar" ? "الساحة" : "Arena"}
+            </span>
+          </button>
+
+          {/* 4 - Tournaments */}
+          <button
+            id="mobile-nav-tournaments"
+            type="button"
+            onClick={() => {
+              setCurrentView("tournaments");
+              setSelectedProfileId(null);
+            }}
+            className={`flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer ${
+              currentView === "tournaments"
+                ? "text-yellow-400 bg-yellow-500/20 font-bold shadow-[inset_0_0_10px_rgba(245,158,11,0.3)] ring-1 ring-yellow-500/30"
+                : "text-white/50 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <Trophy className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span className="text-[9px] sm:text-[10px] font-mono tracking-wider">
+              {language === "ar" ? "البطولات" : "League"}
+            </span>
+          </button>
+
+          {/* 5 - Messages */}
           <button
             id="mobile-nav-message"
             type="button"
@@ -7852,72 +8113,15 @@ export default function App() {
               setCurrentView("messages");
               setSelectedProfileId(null);
             }}
-            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+            className={`flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer ${
               currentView === "messages"
-                ? "text-purple-400 bg-purple-500/20 font-bold shadow-[inset_0_0_10px_rgba(168,85,247,0.3)] ring-1 ring-purple-500/30"
+                ? "text-cyan-400 bg-cyan-500/20 font-bold shadow-[inset_0_0_10px_rgba(6,182,212,0.3)] ring-1 ring-cyan-500/30"
                 : "text-white/50 hover:text-white hover:bg-white/5"
             }`}
           >
             <MessageSquare className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span className="text-[9px] sm:text-[10px] font-mono tracking-wider">
-              {language === "ar" ? "الرسائل" : "Message"}
-            </span>
-          </button>
-
-          {/* 3 - Vexora AI */}
-          <button
-            id="mobile-nav-ai-chat"
-            type="button"
-            onClick={handleVexoraAiClick}
-            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-              showVexoraAiSoon
-                ? "text-purple-400 bg-purple-500/20 font-bold shadow-[inset_0_0_10px_rgba(168,85,247,0.3)] ring-1 ring-purple-500/30"
-                : "text-white/50 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <Bot className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            <span className="text-[9px] sm:text-[10px] font-mono tracking-wider">
-              Vexora AI
-            </span>
-          </button>
-
-          {/* 4 - COMMUNITY */}
-          <button
-            id="mobile-nav-community"
-            type="button"
-            onClick={() => {
-              setCurrentView("communities");
-              setSelectedProfileId(null);
-            }}
-            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-              currentView === "communities"
-                ? "text-purple-400 bg-purple-500/20 font-bold shadow-[inset_0_0_10px_rgba(168,85,247,0.3)] ring-1 ring-purple-500/30"
-                : "text-white/50 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <Zap className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            <span className="text-[9px] sm:text-[10px] font-mono tracking-wider">
-              {language === "ar" ? "المجتمعات" : "COMMUNITY"}
-            </span>
-          </button>
-
-          {/* 5 - SAVED */}
-          <button
-            id="mobile-nav-saved"
-            type="button"
-            onClick={() => {
-              setCurrentView("saved");
-              setSelectedProfileId(null);
-            }}
-            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-              currentView === "saved"
-                ? "text-purple-400 bg-purple-500/20 font-bold shadow-[inset_0_0_10px_rgba(168,85,247,0.3)] ring-1 ring-purple-500/30"
-                : "text-white/50 hover:text-white hover:bg-white/5"
-            }`}
-          >
-            <Bookmark className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-            <span className="text-[9px] sm:text-[10px] font-mono tracking-wider">
-              {language === "ar" ? "المحفوظات" : "SAVED"}
+              {language === "ar" ? "الرسائل" : "Chat"}
             </span>
           </button>
 
@@ -7929,15 +8133,15 @@ export default function App() {
               setCurrentView("my-account");
               setSelectedProfileId(null);
             }}
-            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+            className={`flex flex-col items-center gap-1 px-2.5 py-1.5 rounded-xl transition-all cursor-pointer ${
               currentView === "my-account"
-                ? "text-purple-400 bg-purple-500/20 font-bold shadow-[inset_0_0_10px_rgba(168,85,247,0.3)] ring-1 ring-purple-500/30"
+                ? "text-cyan-400 bg-cyan-500/20 font-bold shadow-[inset_0_0_10px_rgba(6,182,212,0.3)] ring-1 ring-cyan-500/30"
                 : "text-white/50 hover:text-white hover:bg-white/5"
             }`}
           >
             <User className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span className="text-[9px] sm:text-[10px] font-mono tracking-wider">
-              {language === "ar" ? "حسابي" : "My Account"}
+              {language === "ar" ? "حسابي" : "Profile"}
             </span>
           </button>
 

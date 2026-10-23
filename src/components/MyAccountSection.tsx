@@ -39,6 +39,7 @@ import {
   Download,
   Mic,
   HardDrive,
+  Gamepad2,
 } from "lucide-react";
 import { UserProfile } from "../types";
 
@@ -56,6 +57,7 @@ interface MyAccountSectionProps {
   onOpenOwnerConsole?: () => void;
   onOpenDataVault?: () => void;
   onOpenVoiceSettings?: () => void;
+  onOpenGamingAccounts?: () => void;
   isOwner?: boolean;
   userPostCount?: number;
   userSavedCount?: number;
@@ -78,12 +80,13 @@ export default function MyAccountSection({
   onOpenOwnerConsole,
   onOpenDataVault,
   onOpenVoiceSettings,
+  onOpenGamingAccounts,
   isOwner,
   userPostCount = 0,
   userSavedCount = 0,
 }: MyAccountSectionProps) {
   const [activeTab, setActiveTab] = useState<
-    "profile" | "security" | "preferences" | "dataVault" | "voiceSettings"
+    "profile" | "security" | "preferences" | "dataVault" | "voiceSettings" | "gamingMatrix"
   >("profile");
 
   // Bio state
@@ -895,6 +898,19 @@ export default function MyAccountSection({
           <Volume2 className="w-4 h-4 text-indigo-400" />
           <span>{language === "ar" ? "🎙️ ضبط الصوت" : "🎙️ Audio & Voice"}</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("gamingMatrix")}
+          className={`flex-1 min-w-[140px] py-2.5 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            activeTab === "gamingMatrix"
+              ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-black font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+              : "text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10"
+          }`}
+        >
+          <Gamepad2 className="w-4 h-4 text-cyan-400" />
+          <span>{language === "ar" ? "🎮 حسابات الألعاب" : "🎮 Gaming IDs"}</span>
+        </button>
       </div>
 
       {/* TAB 1: Profile & Account Information */}
@@ -1633,6 +1649,121 @@ export default function MyAccountSection({
                   {language === "ar"
                     ? "معاينة واختيار نغمة الرنين المناسبة للمكالمات."
                     : "Preview and select custom call ringtones."}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: PC Gaming Accounts Matrix */}
+      {activeTab === "gamingMatrix" && (
+        <div className="space-y-6">
+          <div className="rounded-3xl p-6 sm:p-7 border border-cyan-500/20 bg-[#0d121f]/90 backdrop-blur-xl shadow-2xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+              <div className="space-y-1">
+                <h4 className="text-base font-black uppercase tracking-wider text-white flex items-center gap-2">
+                  <Gamepad2 className="w-5 h-5 text-cyan-400" />
+                  <span>
+                    {language === "ar"
+                      ? "مصفوفة ربط حسابات الألعاب الإلكترونية (PC Gaming IDs)"
+                      : "PC Gaming Account Matrix"}
+                  </span>
+                </h4>
+                <p className="text-xs text-zinc-400">
+                  {language === "ar"
+                    ? "اربط هوياتك في Steam و Discord و Battle.net و Riot Games للتأكيد في بطولات الدوري وفرق LFG."
+                    : "Connect Steam, Discord, Battle.net and Riot accounts to sync MMR and verify league roster participation."}
+                </p>
+              </div>
+
+              {onOpenGamingAccounts && (
+                <button
+                  type="button"
+                  onClick={onOpenGamingAccounts}
+                  className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-[0_0_20px_rgba(6,182,212,0.35)] flex items-center gap-2 cursor-pointer shrink-0"
+                >
+                  <Gamepad2 className="w-4 h-4 text-black" />
+                  <span>
+                    {language === "ar"
+                      ? "تعديل وربط الحسابات"
+                      : "Manage Gaming IDs"}
+                  </span>
+                </button>
+              )}
+            </div>
+
+            {/* Matrix Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div
+                onClick={onOpenGamingAccounts}
+                className="p-4 rounded-2xl bg-black/40 border border-[#1b2838] hover:border-cyan-500/40 transition-all cursor-pointer space-y-2 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#171a21] border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-mono text-xs font-black">
+                    STM
+                  </div>
+                  <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                    Linked
+                  </span>
+                </div>
+                <h5 className="font-bold text-xs text-white">Steam PC</h5>
+                <p className="text-[10px] font-mono text-zinc-400">
+                  {language === "ar" ? "تأكيد VAC وحساب الألعاب" : "VAC Clean • Library Synced"}
+                </p>
+              </div>
+
+              <div
+                onClick={onOpenGamingAccounts}
+                className="p-4 rounded-2xl bg-black/40 border border-[#5865f2]/40 hover:border-[#5865f2]/70 transition-all cursor-pointer space-y-2 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#5865f2]/20 border border-[#5865f2]/50 flex items-center justify-center text-[#858ffd] font-mono text-xs font-black">
+                    DIS
+                  </div>
+                  <span className="text-[9px] font-mono text-[#858ffd] bg-[#5865f2]/10 px-2 py-0.5 rounded border border-[#5865f2]/30">
+                    Syncing
+                  </span>
+                </div>
+                <h5 className="font-bold text-xs text-white">Discord</h5>
+                <p className="text-[10px] font-mono text-zinc-400">
+                  {language === "ar" ? "غرف الصوت والرسائل الفورية" : "Voice Channels & Tags"}
+                </p>
+              </div>
+
+              <div
+                onClick={onOpenGamingAccounts}
+                className="p-4 rounded-2xl bg-black/40 border border-[#00aeff]/30 hover:border-[#00aeff]/60 transition-all cursor-pointer space-y-2 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#00aeff]/20 border border-[#00aeff]/40 flex items-center justify-center text-[#00aeff] font-mono text-xs font-black">
+                    BTL
+                  </div>
+                  <span className="text-[9px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30">
+                    Active
+                  </span>
+                </div>
+                <h5 className="font-bold text-xs text-white">Battle.net</h5>
+                <p className="text-[10px] font-mono text-zinc-400">
+                  {language === "ar" ? "بطولات Overwatch و Warzone" : "Overwatch & COD Tag"}
+                </p>
+              </div>
+
+              <div
+                onClick={onOpenGamingAccounts}
+                className="p-4 rounded-2xl bg-black/40 border border-[#ff4655]/40 hover:border-[#ff4655]/70 transition-all cursor-pointer space-y-2 group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="w-8 h-8 rounded-xl bg-[#ff4655]/20 border border-[#ff4655]/40 flex items-center justify-center text-[#ff4655] font-mono text-xs font-black">
+                    ROT
+                  </div>
+                  <span className="text-[9px] font-mono text-[#ff4655] bg-[#ff4655]/10 px-2 py-0.5 rounded border border-[#ff4655]/30">
+                    Verified
+                  </span>
+                </div>
+                <h5 className="font-bold text-xs text-white">Riot Games</h5>
+                <p className="text-[10px] font-mono text-zinc-400">
+                  {language === "ar" ? "رتبة Valorant & League" : "Valorant Radiant Shard"}
                 </p>
               </div>
             </div>
