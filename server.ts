@@ -7,6 +7,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { GoogleGenAI } from "@google/genai";
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -79,9 +80,131 @@ function getAiClient(): GoogleGenAI {
 
 async function startServer() {
   const app = express();
-  app.use(express.json());
+  app.use(express.json({ limit: '150mb' }));
+  app.use(express.raw({ type: ['video/*', 'application/octet-stream'], limit: '300mb' }));
 
   const httpServer = createServer(app);
+
+  // Video Management & Upload Endpoints
+  const VIDEO_CONFIG_PATH = path.join(process.cwd(), 'public', 'video-config.json');
+
+  app.get('/api/video/info', (req, res) => {
+    try {
+      const publicAdPath = path.join(process.cwd(), 'public', 'Vexora_Network_Ad.mp4');
+      const publicIntroPath = path.join(process.cwd(), 'public', 'vexora-intro.mp4');
+
+      let filePath = '';
+      let fileName = '';
+      if (fs.existsSync(publicAdPath)) {
+        filePath = publicAdPath;
+        fileName = 'Vexora_Network_Ad.mp4';
+      } else if (fs.existsSync(publicIntroPath)) {
+        filePath = publicIntroPath;
+        fileName = 'vexora-intro.mp4';
+      }
+
+      let customUrl = null;
+      if (fs.existsSync(VIDEO_CONFIG_PATH)) {
+        try {
+          const cfg = JSON.parse(fs.readFileSync(VIDEO_CONFIG_PATH, 'utf-8'));
+          if (cfg.customUrl) customUrl = cfg.customUrl;
+        } catch (_) {}
+      }
+
+      if (filePath) {
+        const stats = fs.statSync(filePath);
+        return res.json({
+          hasVideo: true,
+          fileName,
+          sizeBytes: stats.size,
+          sizeMb: (stats.size / (1024 * 1024)).toFixed(2),
+          updatedAt: stats.mtime.toISOString(),
+          url: customUrl || `/${fileName}`,
+          customUrl
+        });
+      }
+
+      return res.json({
+        hasVideo: !!customUrl,
+        fileName: null,
+        url: customUrl || '/Vexora_Network_Ad.mp4',
+        customUrl
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post('/api/video/upload', (req, res) => {
+    try {
+      let buffer: Buffer | null = null;
+      let originalName = 'Vexora_Network_Ad.mp4';
+
+      if (req.body && typeof req.body === 'object' && req.body.base64) {
+        const raw = req.body.base64.includes(',') ? req.body.base64.split(',')[1] : req.body.base64;
+        buffer = Buffer.from(raw, 'base64');
+        if (req.body.fileName) originalName = req.body.fileName;
+      } else if (Buffer.isBuffer(req.body)) {
+        buffer = req.body;
+      }
+
+      if (!buffer || buffer.length === 0) {
+        return res.status(400).json({ error: 'No video payload received' });
+      }
+
+      const publicDir = path.join(process.cwd(), 'public');
+      if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+
+      const targetPaths = [
+        path.join(publicDir, 'Vexora_Network_Ad.mp4'),
+        path.join(publicDir, 'vexora-intro.mp4'),
+      ];
+
+      const distDir = path.join(process.cwd(), 'dist');
+      if (fs.existsSync(distDir)) {
+        targetPaths.push(path.join(distDir, 'Vexora_Network_Ad.mp4'));
+        targetPaths.push(path.join(distDir, 'vexora-intro.mp4'));
+      }
+
+      const docsDir = path.join(process.cwd(), 'docs');
+      if (fs.existsSync(docsDir)) {
+        targetPaths.push(path.join(docsDir, 'Vexora_Network_Ad.mp4'));
+        targetPaths.push(path.join(docsDir, 'vexora-intro.mp4'));
+      }
+
+      for (const p of targetPaths) {
+        fs.writeFileSync(p, buffer);
+      }
+
+      try {
+        fs.writeFileSync(VIDEO_CONFIG_PATH, JSON.stringify({ customUrl: null, fileName: originalName, updatedAt: new Date().toISOString() }));
+      } catch (_) {}
+
+      console.log(`[VIDEO] Successfully uploaded and saved video file: ${originalName} (${(buffer.length / (1024 * 1024)).toFixed(2)} MB)`);
+
+      return res.json({
+        success: true,
+        fileName: 'Vexora_Network_Ad.mp4',
+        url: '/Vexora_Network_Ad.mp4',
+        sizeMb: (buffer.length / (1024 * 1024)).toFixed(2)
+      });
+    } catch (err: any) {
+      console.error('[VIDEO UPLOAD ERROR]', err);
+      res.status(500).json({ error: err.message || 'Failed to save video' });
+    }
+  });
+
+  app.post('/api/video/url', (req, res) => {
+    try {
+      const { url } = req.body;
+      const publicDir = path.join(process.cwd(), 'public');
+      if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+      fs.writeFileSync(VIDEO_CONFIG_PATH, JSON.stringify({ customUrl: url || null, updatedAt: new Date().toISOString() }));
+      res.json({ success: true, customUrl: url });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
   
   // API Routes
   app.get('/api/auth/google/url', (req, res) => {

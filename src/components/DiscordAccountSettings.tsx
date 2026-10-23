@@ -65,11 +65,6 @@ type SettingCategory =
   | 'data-privacy'
   | 'messaging'
   | 'notifications'
-  | 'nitro'
-  | 'server-boost'
-  | 'subscriptions'
-  | 'gift-inventory'
-  | 'billing'
   | 'voice-video'
   | 'appearance'
   | 'accessibility'
@@ -322,16 +317,6 @@ export default function DiscordAccountSettings({
         { id: 'data-privacy' as SettingCategory, label: 'Data & Privacy', icon: Shield },
         { id: 'messaging' as SettingCategory, label: 'Messaging Permissions', icon: MessageSquare },
         { id: 'notifications' as SettingCategory, label: 'Notifications', icon: Bell },
-      ]
-    },
-    {
-      category: 'Billing',
-      items: [
-        { id: 'nitro' as SettingCategory, label: 'Nitro', icon: Sparkles },
-        { id: 'server-boost' as SettingCategory, label: 'Server Boost', icon: Award },
-        { id: 'subscriptions' as SettingCategory, label: 'Subscriptions', icon: Repeat },
-        { id: 'gift-inventory' as SettingCategory, label: 'Gift Inventory', icon: Gift },
-        { id: 'billing' as SettingCategory, label: 'Billing', icon: CreditCard },
       ]
     },
     {
@@ -1114,29 +1099,6 @@ export default function DiscordAccountSettings({
                     onChange={(e) => setUnreadBadges(e.target.checked)} 
                     className="w-4 h-4 accent-[#5865f2] cursor-pointer" 
                   />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* NITRO */}
-          {activeCategory === 'nitro' && (
-            <div className="space-y-6">
-              <div className="bg-gradient-to-r from-[#5865f2] to-[#eb459e] rounded-2xl p-6 text-white space-y-4 shadow-xl">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-7 h-7" />
-                  <h3 className="text-2xl font-black tracking-wide">Vexora Nitro</h3>
-                </div>
-                <p className="text-sm max-w-lg opacity-90">
-                  Upgrade your emoji power, customize your profile themes, share larger files up to 500MB, and stream in crisp HD 4K 60FPS.
-                </p>
-                <div className="pt-2 flex flex-wrap gap-3">
-                  <button className="px-5 py-2.5 bg-white text-black font-bold text-xs rounded-xl shadow-lg hover:bg-white/90 transition-all cursor-pointer">
-                    Subscribe for $9.99/mo
-                  </button>
-                  <button className="px-5 py-2.5 bg-black/30 hover:bg-black/40 text-white font-bold text-xs rounded-xl transition-all cursor-pointer">
-                    Gift Nitro
-                  </button>
                 </div>
               </div>
             </div>

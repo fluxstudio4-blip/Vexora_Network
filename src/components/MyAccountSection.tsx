@@ -551,14 +551,14 @@ export default function MyAccountSection({
           </div>
 
           <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-mono tracking-widest uppercase font-bold bg-black/70 text-cyan-300 border border-cyan-500/30 backdrop-blur-md shadow-[0_0_15px_rgba(6,182,212,0.25)]">
+              <img src="/vexora-logo.jpg" alt="Vexora" className="w-3.5 h-3.5 rounded-full object-cover" referrerPolicy="no-referrer" />
+              <span>VEXORA</span>
+            </div>
             <span className="px-3 py-1 rounded-full text-[10px] font-mono tracking-widest uppercase font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-md flex items-center gap-1.5 shadow-[0_0_15px_rgba(168,85,247,0.3)]">
               <Sparkles className="w-3 h-3 text-purple-400" />
               <span>
-                {currentUser?.subscriptionTier === "plus_pro"
-                  ? "VEXORA PRO"
-                  : currentUser?.subscriptionTier === "plus"
-                    ? "VEXORA PLUS"
-                    : "STANDARD TIER"}
+                {currentUser?.isVerified ? "VERIFIED NODE" : "STANDARD TIER"}
               </span>
             </span>
           </div>

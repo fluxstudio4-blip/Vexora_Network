@@ -340,8 +340,8 @@ export const OwnerControlCenter: React.FC<OwnerControlCenterProps> = ({
       playOwnerChime('vip');
       onAddNotification(
         isArabic 
-          ? `تم ترقية المستخدم ${user.name} إلى VIP Plus Pro 👑` 
-          : `Granted VIP Plus Pro tier to ${user.name} 👑`,
+          ? `تم ترقية المستخدم ${user.name} إلى VIP 👑` 
+          : `Granted VIP status to ${user.name} 👑`,
         'success'
       );
       return updated;
@@ -627,10 +627,10 @@ export const OwnerControlCenter: React.FC<OwnerControlCenterProps> = ({
     persistUserUpdate(updated);
     playOwnerChime('vip');
     onAddNotification(
-      isArabic ? `👑 أمر المالك: تم منح اشتراك VIP Plus Pro لجميع أعضاء المنصة (${count} حساب)!` : `👑 Owner Directive: Granted VIP Plus Pro to ALL ${count} nodes!`,
+      isArabic ? `👑 أمر المالك: تم منح عضوية VIP لجميع أعضاء المنصة (${count} حساب)!` : `👑 Owner Directive: Granted VIP status to ALL ${count} nodes!`,
       'success'
     );
-    setTerminalLogs(prev => [`[ORDER_EXECUTED] Grant VIP Pro to all ${count} users: COMPLETED.`, ...prev]);
+    setTerminalLogs(prev => [`[ORDER_EXECUTED] Grant VIP status to all ${count} users: COMPLETED.`, ...prev]);
   };
 
   // 2. Grant Verification to All Users
@@ -725,7 +725,7 @@ export const OwnerControlCenter: React.FC<OwnerControlCenterProps> = ({
         '  /delete <all | selected | @handle> - Delete accounts from site',
         '  /purge                      - Master wipe of all non-owner accounts',
         '  /verify <@handle | all>     - Grant blue checkmark',
-        '  /vip <@handle | all>        - Grant VIP Plus Pro status',
+        '  /vip <@handle | all>        - Grant VIP status',
         '  /ban <@handle | selected>   - Ban user from network',
         '  /unban <@handle | selected> - Restore user access',
         '  /add-user <name> <handle>   - Spawn new account',
@@ -769,7 +769,7 @@ export const OwnerControlCenter: React.FC<OwnerControlCenterProps> = ({
         const user = (Object.values(localUsers) as UserProfile[]).find(u => u && u.handle.toLowerCase() === targetHandle);
         if (user) {
           handleToggleVip(user.id);
-          setTerminalLogs(prev => [`[SUCCESS] Granted VIP Plus Pro to @${user.handle}`, ...prev]);
+          setTerminalLogs(prev => [`[SUCCESS] Granted VIP status to @${user.handle}`, ...prev]);
         } else {
           setTerminalLogs(prev => [`[ERROR] User handle not found: ${arg1}`, ...prev]);
         }
@@ -1105,10 +1105,10 @@ export const OwnerControlCenter: React.FC<OwnerControlCenterProps> = ({
                         <Crown className="w-4 h-4" />
                       </div>
                       <h4 className="font-bold text-xs text-white group-hover:text-amber-300 transition-colors">
-                        {isArabic ? 'ترقية الجميع إلى VIP Plus Pro' : 'Grant VIP Pro to All Nodes'}
+                        {isArabic ? 'منح عضوية VIP للجميع' : 'Grant VIP to All Nodes'}
                       </h4>
                       <p className="text-[10px] text-white/50 leading-relaxed font-sans">
-                        {isArabic ? 'ترقية فورية لكافة الحسابات في مصفوفة الأعضاء لاشتراك Plus Pro.' : 'Instantly upgrade all registered accounts to VIP Plus Pro subscription.'}
+                        {isArabic ? 'ترقية فورية لكافة الحسابات في مصفوفة الأعضاء لعضوية VIP المميزة.' : 'Instantly upgrade all registered accounts to VIP member status.'}
                       </p>
                     </div>
                     <button
@@ -1615,10 +1615,10 @@ export const OwnerControlCenter: React.FC<OwnerControlCenterProps> = ({
                                 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' 
                                 : 'bg-white/5 hover:bg-white/10 text-white/60'
                             }`}
-                            title="Grant VIP Plus Pro"
+                            title="Grant VIP"
                           >
                             <Crown className="w-3 h-3" />
-                            <span>{user.subscriptionTier === 'plus_pro' ? 'VIP Pro' : 'VIP'}</span>
+                            <span>VIP</span>
                           </button>
 
                           {/* Dedicated BAN / UNBAN Button */}
@@ -2302,7 +2302,7 @@ export const OwnerControlCenter: React.FC<OwnerControlCenterProps> = ({
                       <label className="p-2.5 rounded-xl bg-white/[0.02] border border-white/10 flex items-center justify-between cursor-pointer select-none">
                         <span className="text-[10px] font-bold text-white flex items-center gap-1">
                           <Star className="w-3.5 h-3.5 text-amber-400" />
-                          {isArabic ? 'اشتراك VIP Pro' : 'VIP Plus Pro'}
+                          {isArabic ? 'عضوية VIP' : 'VIP Member'}
                         </span>
                         <input
                           type="checkbox"

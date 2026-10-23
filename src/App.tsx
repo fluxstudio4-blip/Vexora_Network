@@ -75,7 +75,9 @@ import {
   Paperclip,
   Phone,
   PhoneOff,
+  Film,
   Pin,
+  Play,
   Plus,
   Radio,
   RefreshCw,
@@ -147,6 +149,7 @@ import {
 import { VexoraVideoCallModal } from "./components/VexoraVideoCallModal";
 import { DataVaultModal } from "./components/DataVaultModal";
 import { VoiceSettingsModal } from "./components/VoiceSettingsModal";
+import { VexoraPromoVideoPlayer } from "./components/VexoraPromoVideoPlayer";
 import AudioWaveformVisualizer, {
   LiveVoiceRecorder,
 } from "./components/AudioWaveformVisualizer";
@@ -232,7 +235,6 @@ const translations = {
     frequencyDelay: "Frequency Delay",
     broadcastMail: "Broadcast Mail",
     identity: "Identity",
-    plus: "Plus",
     coreNode: "Core Node",
     enter: "Enter",
     notifications: "Notifications",
@@ -272,7 +274,6 @@ const translations = {
     frequencyDelay: "تأخر التردد",
     broadcastMail: "بريد جماعي",
     identity: "الهوية",
-    plus: "بلس",
     coreNode: "العقدة الرئيسية",
     enter: "دخول",
     notifications: "الإشعارات",
@@ -1716,7 +1717,7 @@ function EditProfileModal({
   profile: UserProfile;
   onClose: () => void;
   onSave: (updated: Partial<UserProfile>) => void;
-  initialTab?: "profile" | "subscription" | "billing" | "system" | "secrets";
+  initialTab?: "profile" | "system" | "secrets";
   language?: "en" | "ar";
   setLanguage?: (lang: "en" | "ar") => void;
   isDevMode?: boolean;
@@ -1730,20 +1731,9 @@ function EditProfileModal({
   const [avatar, setAvatar] = useState(profile.avatar);
   const [banner, setBanner] = useState(profile.banner);
 
-  // Subscription state variables
   const [activeTab, setActiveTab] = useState<
-    "profile" | "subscription" | "billing" | "system" | "secrets"
+    "profile" | "system" | "secrets"
   >(initialTab || "profile");
-  const [subscriptionTier, setSubscriptionTier] = useState<
-    "free" | "plus" | "plus_pro"
-  >(profile.subscriptionTier || "free");
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">(
-    profile.billingCycle || "monthly",
-  );
-  const [subscriptionStatus, setSubscriptionStatus] = useState<
-    "active" | "canceled"
-  >(profile.subscriptionStatus || "active");
-  const [currency, setCurrency] = useState<"USD" | "SAR" | "EGP">("USD");
   const [showFeedback, setShowFeedback] = useState<string | null>(null);
 
   // System preference states
@@ -1760,72 +1750,6 @@ function EditProfileModal({
   );
   const [showKey, setShowKey] = useState(false);
 
-  // Mock subscription payment history data
-  const billingHistory = [
-    {
-      id: "INV-2026-0042",
-      date: "2026-06-01",
-      tier: "plus_pro",
-      baseAmount: { USD: "$9.99", SAR: "38 SAR", EGP: "310 EGP" },
-      status: "paid",
-    },
-    {
-      id: "INV-2026-0021",
-      date: "2026-05-01",
-      tier: "plus_pro",
-      baseAmount: { USD: "$9.99", SAR: "38 SAR", EGP: "310 EGP" },
-      status: "paid",
-    },
-    {
-      id: "INV-2026-0009",
-      date: "2026-04-01",
-      tier: "plus",
-      baseAmount: { USD: "$4.99", SAR: "19 SAR", EGP: "155 EGP" },
-      status: "paid",
-    },
-  ];
-
-  const downloadInvoice = (
-    invoiceId: string,
-    date: string,
-    planName: string,
-    amount: string,
-  ) => {
-    const textContent = `========================================
-             VEXORA NETWORK             
-            OFFICIAL INVOICE            
-========================================
-Invoice ID:     ${invoiceId}
-Billing Date:   ${date}
-Entity:         ${name || profile.name || "Vexora User"}
-Node Location:  ${location || profile.location || "Distributed Node"}
-----------------------------------------
-Service:        Vexora Premium Subscription
-Plan Name:      ${planName}
-Billing Cycle:  ${billingCycle === "monthly" ? "Monthly" : "Annual"}
-Currency:       ${currency}
-Payment Status: PAID / CONFIRMED
-----------------------------------------
-TOTAL PAID:     ${amount}
-========================================
-Thank you for supporting Vexora Network.
-This is a cryptographically signed receipt.
-========================================`;
-
-    const blob = new Blob([textContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `Invoice-${invoiceId}.txt`;
-    link.click();
-    URL.revokeObjectURL(url);
-
-    setShowFeedback(
-      `تم تحميل الفاتورة ${invoiceId} بنجاح! / Invoice downloaded successfully!`,
-    );
-    setTimeout(() => setShowFeedback(null), 3500);
-  };
-
   const handleSave = (e: FormEvent) => {
     e.preventDefault();
     onSave({
@@ -1834,40 +1758,7 @@ This is a cryptographically signed receipt.
       location,
       avatar,
       banner,
-      subscriptionTier,
-      billingCycle,
-      subscriptionStatus,
-      isVerified: subscriptionTier !== "free" ? true : profile.isVerified,
     });
-  };
-
-  const pricing = {
-    plus: {
-      monthly: { USD: "$4.99", SAR: "19 SAR", EGP: "155 EGP" },
-      annual: { USD: "$49.99", SAR: "190 SAR", EGP: "1550 EGP" },
-    },
-    plusPro: {
-      monthly: { USD: "$9.99", SAR: "38 SAR", EGP: "310 EGP" },
-      annual: { USD: "$99.99", SAR: "380 SAR", EGP: "3100 EGP" },
-    },
-  };
-
-  const selectTier = (tier: "free" | "plus" | "plus_pro") => {
-    setSubscriptionTier(tier);
-    setSubscriptionStatus("active");
-
-    if (tier === "free") {
-      setShowFeedback(
-        "تم إلغاء الاشتراك والعودة للحساب المجاني / Downgraded to Free tier successfully.",
-      );
-    } else {
-      const tierName = tier === "plus" ? "Plus 🚀" : "Plus Pro 👑";
-      setShowFeedback(
-        `تم تفعيل اشتراك Vexora ${tierName} بنجاح! شكرًا لدعمك لشبكتنا! / Subscription activated successfully!`,
-      );
-    }
-
-    setTimeout(() => setShowFeedback(null), 4000);
   };
 
   return (
@@ -1925,23 +1816,6 @@ This is a cryptographically signed receipt.
             className={`px-3 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all cursor-pointer ${activeTab === "secrets" ? "bg-white/5 text-white border border-white/10 shadow-inner" : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"}`}
           >
             🔑 Secrets
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("subscription")}
-            className={`px-3 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all relative cursor-pointer flex items-center justify-center gap-1 ${activeTab === "subscription" ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.35)]" : "text-purple-400 hover:text-purple-300 hover:bg-purple-500/5"}`}
-          >
-            👑 Plus
-            {subscriptionTier !== "free" && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("billing")}
-            className={`px-3 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all relative cursor-pointer flex items-center justify-center gap-1 ${activeTab === "billing" ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white border border-indigo-500/30 shadow-[0_0_20px_rgba(99,102,241,0.25)]" : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"}`}
-          >
-            🧾 Billing
           </button>
         </div>
 
@@ -2386,549 +2260,7 @@ This is a cryptographically signed receipt.
             </div>
           )}
 
-          {activeTab === "subscription" && (
-            <div className="space-y-6">
-              {/* Feedback Alert Overlay */}
-              <AnimatePresence>
-                {showFeedback && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-center text-emerald-400 text-xs font-bold leading-relaxed shadow-[0_0_15px_rgba(16,185,129,0.15)]"
-                  >
-                    ✨ {showFeedback}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Current Subscription Status Panel */}
-              <div className="p-4 rounded-2xl border border-white/5 bg-zinc-950/60 flex flex-wrap items-center justify-between gap-4 shadow-inner">
-                <div className="space-y-1">
-                  <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
-                    Active Plan / الاشتراك الحالي
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-black uppercase tracking-wider text-white">
-                      {subscriptionTier === "free" &&
-                        "🎁 الحساب العادي / Free Tier"}
-                      {subscriptionTier === "plus" && "🚀 Vexora Plus"}
-                      {subscriptionTier === "plus_pro" && "👑 Vexora Plus Pro"}
-                    </span>
-                    {subscriptionTier !== "free" && (
-                      <span
-                        className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${subscriptionStatus === "active" ? "bg-emerald-500/10 border border-emerald-500/30 text-emerald-400" : "bg-red-500/10 border border-red-500/30 text-red-400"}`}
-                      >
-                        {subscriptionStatus === "active"
-                          ? "فعّال / Active"
-                          : "ملغي / Canceled"}
-                      </span>
-                    )}
-                  </div>
-                  {subscriptionTier !== "free" && (
-                    <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">
-                      الدورة:{" "}
-                      {billingCycle === "monthly"
-                        ? "شهرية / Monthly"
-                        : "سنوية / Annual (وفّر 16%)"}{" "}
-                      | الحالة:{" "}
-                      {subscriptionStatus === "active"
-                        ? "تجديد تلقائي / Auto-renewing"
-                        : "ينتهي بنهاية المدة / Ending soon"}
-                    </p>
-                  )}
-                </div>
-                {subscriptionTier !== "free" && (
-                  <div className="flex gap-2">
-                    {subscriptionStatus === "active" ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSubscriptionStatus("canceled");
-                          setShowFeedback(
-                            "تم إلغاء التجديد التلقائي للاشتراك بنجاح / Auto-renewal canceled successfully.",
-                          );
-                          setTimeout(() => setShowFeedback(null), 3000);
-                        }}
-                        className="px-3 py-2 bg-red-950/40 hover:bg-red-950/80 border border-red-500/20 text-red-400 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
-                      >
-                        إلغاء التجديد / Cancel Renew
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSubscriptionStatus("active");
-                          setShowFeedback(
-                            "تمت إعادة تفعيل التجديد التلقائي بنجاح / Auto-renewal reactivated successfully.",
-                          );
-                          setTimeout(() => setShowFeedback(null), 3000);
-                        }}
-                        className="px-3 py-2 bg-emerald-950/40 hover:bg-emerald-950/80 border border-emerald-500/20 text-emerald-400 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
-                      >
-                        إعادة التفعيل / Reactivate
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => selectTier("free")}
-                      className="px-3 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer"
-                    >
-                      إلغاء تماماً / Free
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Billing and Currency Control Station */}
-              <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-[#141221] border border-purple-500/10 shadow-md">
-                {/* Billing Toggle (Monthly / Annual) */}
-                <div className="space-y-1.5 flex-shrink-0">
-                  <div className="text-[10px] font-mono text-purple-400/50 uppercase tracking-widest font-black">
-                    Billing Cycle / دورة الفوترة
-                  </div>
-                  <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
-                    <button
-                      type="button"
-                      onClick={() => setBillingCycle("monthly")}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${billingCycle === "monthly" ? "bg-purple-600 text-white shadow" : "text-zinc-500 hover:text-zinc-300"}`}
-                    >
-                      شهرية / Monthly
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBillingCycle("annual")}
-                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all relative cursor-pointer flex items-center gap-1 ${billingCycle === "annual" ? "bg-purple-600 text-white shadow" : "text-zinc-500 hover:text-zinc-300"}`}
-                    >
-                      سنوية / Annual
-                      <span className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[8px] px-1 py-0.5 rounded scale-90 font-black animate-pulse">
-                        -16%
-                      </span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Currency Switcher (USD, SAR, EGP) */}
-                <div className="space-y-1.5 flex-shrink-0">
-                  <div className="text-[10px] font-mono text-purple-400/50 uppercase tracking-widest font-black">
-                    Currency / العملة المحلية
-                  </div>
-                  <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
-                    {(["USD", "SAR", "EGP"] as const).map((curr) => (
-                      <button
-                        key={curr}
-                        type="button"
-                        onClick={() => setCurrency(curr)}
-                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${currency === curr ? "bg-purple-600 text-white shadow" : "text-zinc-500 hover:text-zinc-300"}`}
-                      >
-                        {curr}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Subscription Plan Offerings */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Plus Card */}
-                <div
-                  className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between relative overflow-hidden ${subscriptionTier === "plus" ? "border-purple-500/60 bg-purple-500/5 shadow-[0_0_25px_rgba(168,85,247,0.15)]" : "border-white/5 bg-zinc-950/40 hover:border-white/10"}`}
-                >
-                  {subscriptionTier === "plus" && (
-                    <div className="absolute top-2 right-2 bg-purple-600 text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md text-white shadow-[0_0_10px_rgba(168,85,247,0.5)]">
-                      Active / نشط
-                    </div>
-                  )}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-purple-500/15 flex items-center justify-center text-purple-400">
-                        <Zap className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h4 className="font-black uppercase tracking-widest text-xs text-white">
-                          Plus Tier / العضوية العادية
-                        </h4>
-                        <div className="text-[10px] text-purple-400/80 font-mono">
-                          STANDARDIZED CORE PLUS
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-0.5">
-                      <div className="text-xl font-black text-white">
-                        {billingCycle === "monthly"
-                          ? pricing.plus.monthly[currency]
-                          : pricing.plus.annual[currency]}
-                      </div>
-                      <div className="text-[9px] text-zinc-500 font-mono">
-                        {billingCycle === "monthly"
-                          ? "لكل شهر / Per month"
-                          : "لكل سنة (وفّر 16%) / Per year"}
-                      </div>
-                    </div>
-
-                    <ul className="space-y-2 text-[10px] text-zinc-300 leading-relaxed pt-2 border-t border-white/5">
-                      <li className="flex items-start gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-purple-400 flex-shrink-0 mt-0.5" />
-                        <span>
-                          شارة توثيق زرقاء متميزة ✨ / Verified Blue Badge
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-purple-400 flex-shrink-0 mt-0.5" />
-                        <span>
-                          تعديل وتراجع عن المنشورات 📝 / Edit & Undo post
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-purple-400 flex-shrink-0 mt-0.5" />
-                        <span>
-                          تصفح نظيف بلا إعلانات 🚫 / Ad-Free experience
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-purple-400 flex-shrink-0 mt-0.5" />
-                        <span>
-                          زيادة انتشار المنشورات ⚡ / Normal Boost priority
-                        </span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => selectTier("plus")}
-                    className={`w-full mt-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${subscriptionTier === "plus" ? "bg-emerald-600 hover:bg-emerald-500 text-white" : "bg-purple-600 hover:bg-purple-500 text-white shadow-md hover:shadow-purple-500/20"}`}
-                  >
-                    {subscriptionTier === "plus"
-                      ? "تجديد أو تأكيد / Confirmed"
-                      : "اشترك الآن / Subscribe Now"}
-                  </button>
-                </div>
-
-                {/* Plus Pro Card */}
-                <div
-                  className={`p-5 rounded-2xl border transition-all duration-300 flex flex-col justify-between relative overflow-hidden ${subscriptionTier === "plus_pro" ? "border-amber-500/60 bg-amber-500/5 shadow-[0_0_25px_rgba(245,158,11,0.15)]" : "border-white/5 bg-zinc-950/40 hover:border-white/10"}`}
-                >
-                  <div className="absolute top-2 right-2 bg-gradient-to-r from-yellow-500 to-amber-600 text-[7px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md text-white shadow-md">
-                    {subscriptionTier === "plus_pro"
-                      ? "Active / نشط"
-                      : "Premium / موصى به"}
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center text-amber-400">
-                        <Crown className="w-4 h-4 animate-bounce" />
-                      </div>
-                      <div>
-                        <h4 className="font-black uppercase tracking-widest text-xs text-white">
-                          Plus Pro / الاحترافية الفائقة
-                        </h4>
-                        <div className="text-[10px] text-amber-400/80 font-mono">
-                          SUPREME ADVANCED SUITE
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-0.5">
-                      <div className="text-xl font-black text-white">
-                        {billingCycle === "monthly"
-                          ? pricing.plusPro.monthly[currency]
-                          : pricing.plusPro.annual[currency]}
-                      </div>
-                      <div className="text-[9px] text-zinc-500 font-mono">
-                        {billingCycle === "monthly"
-                          ? "لكل شهر / Per month"
-                          : "لكل سنة (وفّر 16%) / Per year"}
-                      </div>
-                    </div>
-
-                    <ul className="space-y-2 text-[10px] text-zinc-300 leading-relaxed pt-2 border-t border-white/5">
-                      <li className="flex items-start gap-1.5 text-amber-200">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                        <span>كل مميزات Plus السابقة / Everything in Plus</span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                        <span>
-                          تحليلات متقدمة لزوار الحساب 📊 / Profile Analytics
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                        <span>
-                          أقصى زيادة انتشار للمنشورات 🔥 / Maximum Reach Boost
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                        <span>
-                          توليد صور ذكاء اصطناعي غير محدود 🚀 / Unlimited AI
-                          Image Gen
-                        </span>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-amber-400 flex-shrink-0 mt-0.5" />
-                        <span>
-                          دعم فني فوري مخصص 🛡️ / Immediate Priority Support
-                        </span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => selectTier("plus_pro")}
-                    className={`w-full mt-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${subscriptionTier === "plus_pro" ? "bg-emerald-600 hover:bg-emerald-500 text-white" : "bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-zinc-950 shadow-md hover:shadow-yellow-500/20"}`}
-                  >
-                    {subscriptionTier === "plus_pro"
-                      ? "تجديد أو تأكيد / Confirmed"
-                      : "اشترك الآن / Subscribe Now"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Comprehensive Feature Comparison Table */}
-              <div className="space-y-2">
-                <h4 className="text-[10px] font-mono uppercase tracking-[0.25em] text-zinc-400 font-bold border-l-2 border-purple-500 pl-2">
-                  Feature Matrix / مقارنة الميزات الكاملة
-                </h4>
-                <div className="overflow-x-auto rounded-xl border border-white/5 bg-zinc-950/80">
-                  <table className="w-full text-[10px] text-left text-zinc-300">
-                    <thead className="bg-white/5 text-[9px] font-mono uppercase text-zinc-400 border-b border-white/5">
-                      <tr>
-                        <th className="p-3 text-right">الميزة / Feature</th>
-                        <th className="p-3 text-center">المجاني / Free</th>
-                        <th className="p-3 text-center text-purple-400">
-                          Plus 🚀
-                        </th>
-                        <th className="p-3 text-center text-amber-400">
-                          Plus Pro 👑
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5 font-medium">
-                      <tr>
-                        <td className="p-3 font-bold text-white text-right">
-                          شارة التوثيق الزرقاء / Verified Badge
-                        </td>
-                        <td className="p-3 text-center text-red-500">❌</td>
-                        <td className="p-3 text-center text-emerald-400 font-bold">
-                          ✅
-                        </td>
-                        <td className="p-3 text-center text-emerald-400 font-bold">
-                          ✅
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-bold text-white text-right">
-                          تعديل وتراجع عن المنشورات / Edit Post
-                        </td>
-                        <td className="p-3 text-center text-red-500">❌</td>
-                        <td className="p-3 text-center text-emerald-400">✅</td>
-                        <td className="p-3 text-center text-emerald-400">✅</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-bold text-white text-right">
-                          تصفح بدون إعلانات / Ad-Free Browsing
-                        </td>
-                        <td className="p-3 text-center text-red-500">❌</td>
-                        <td className="p-3 text-center text-emerald-400">✅</td>
-                        <td className="p-3 text-center text-emerald-400">✅</td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-bold text-white text-right">
-                          زيادة الانتشار / Algorithm Boost
-                        </td>
-                        <td className="p-3 text-center text-zinc-500">
-                          افتراضي / normal
-                        </td>
-                        <td className="p-3 text-center text-purple-400">
-                          متوسط / ⚡ Medium
-                        </td>
-                        <td className="p-3 text-center text-amber-400 font-extrabold">
-                          أقصى حد / 🔥 Maximum
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-bold text-white text-right">
-                          تحليلات الزوار / Profile Visitor Stats
-                        </td>
-                        <td className="p-3 text-center text-red-500">❌</td>
-                        <td className="p-3 text-center text-red-500">❌</td>
-                        <td className="p-3 text-center text-emerald-400 font-extrabold">
-                          ✅ متبخر / Advanced
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-bold text-white text-right">
-                          توليد الذكاء الاصطناعي / AI Image Creation
-                        </td>
-                        <td className="p-3 text-center text-zinc-500">
-                          محدود / Limited
-                        </td>
-                        <td className="p-3 text-center text-purple-300">
-                          مسرع / Fast +100
-                        </td>
-                        <td className="p-3 text-center text-amber-400 font-extrabold">
-                          غير محدود / 🚀 Unlimited
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-3 font-bold text-white text-right">
-                          دعم العملاء / Priority Support
-                        </td>
-                        <td className="p-3 text-center text-zinc-500">
-                          عادي / Standard
-                        </td>
-                        <td className="p-3 text-center text-purple-300 font-bold">
-                          أولوية / Priority
-                        </td>
-                        <td className="p-3 text-center text-amber-400 font-extrabold">
-                          فوري / Instant 🛡️
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "billing" && (
-            <div className="space-y-6">
-              {/* Alert Feedback Banner inside Billing */}
-              <AnimatePresence>
-                {showFeedback && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-3 bg-emerald-500/20 border border-emerald-500/40 rounded-xl text-center text-emerald-400 text-xs font-bold leading-relaxed shadow-[0_0_15px_rgba(16,185,129,0.15)] animate-pulse"
-                  >
-                    ✨ {showFeedback}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Billing Info Panel */}
-              <div className="p-5 rounded-2xl border border-white/5 bg-zinc-950/60 space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-black uppercase tracking-widest text-white">
-                      Billing Administration / إدارة المعاملات المالية
-                    </h4>
-                    <p className="text-[10px] text-zinc-500 font-mono">
-                      SECURE TRANS ENGINE
-                    </p>
-                  </div>
-                </div>
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
-                  هنا تجد جميع الفواتير والمدفوعات السابقة المتعلقة باشتراكك في
-                  شبكة Vexora. يمكنك تحميل نسخ PDF الموثقة لكل معاملة.
-                  <br />
-                  <span className="text-zinc-500">
-                    Here you can find all previous bills and receipts for your
-                    Vexora subscription. Official text receipts can be
-                    downloaded directly.
-                  </span>
-                </p>
-              </div>
-
-              {/* Invoices List */}
-              <div className="space-y-3">
-                <h4 className="text-[10px] font-mono uppercase tracking-[0.25em] text-zinc-400 font-bold border-l-2 border-indigo-500 pl-2">
-                  Transaction Records / سجل الفواتير الصادرة
-                </h4>
-
-                <div className="overflow-hidden rounded-2xl border border-white/5 bg-zinc-950/80">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-[11px] text-zinc-300 min-w-[500px]">
-                      <thead className="bg-white/5 text-[9px] font-mono uppercase text-zinc-400 border-b border-white/5">
-                        <tr>
-                          <th className="p-4 text-right">رقم الفاتورة / ID</th>
-                          <th className="p-4 text-center">التاريخ / Date</th>
-                          <th className="p-4 text-center">الباقة / Plan</th>
-                          <th className="p-4 text-center">المبلغ / Amount</th>
-                          <th className="p-4 text-center">الحالة / Status</th>
-                          <th className="p-4 text-center">الإجراء / Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5 font-medium">
-                        {billingHistory.map((invoice) => {
-                          const planName =
-                            invoice.tier === "plus_pro"
-                              ? "Plus Pro 👑"
-                              : "Plus 🚀";
-                          const displayAmount = invoice.baseAmount[currency];
-                          return (
-                            <tr
-                              key={invoice.id}
-                              className="hover:bg-white/[0.02] transition-colors"
-                            >
-                              <td className="p-4 font-mono text-zinc-400 text-right">
-                                {invoice.id}
-                              </td>
-                              <td className="p-4 text-center">
-                                {invoice.date}
-                              </td>
-                              <td className="p-4 text-center font-bold text-white">
-                                {planName}
-                              </td>
-                              <td className="p-4 text-center font-black text-indigo-400">
-                                {displayAmount}
-                              </td>
-                              <td className="p-4 text-center">
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.05)]">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                  مدفوع / Paid
-                                </span>
-                              </td>
-                              <td className="p-4 text-center">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    downloadInvoice(
-                                      invoice.id,
-                                      invoice.date,
-                                      planName,
-                                      displayAmount,
-                                    )
-                                  }
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95"
-                                >
-                                  <Download className="w-3.5 h-3.5" />
-                                  تحميل / Download
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-
-              {/* Helpful Tips Panel */}
-              <div className="p-4 rounded-xl border border-white/5 bg-[#100e1c]/40 text-[10px] text-zinc-500 leading-relaxed font-mono flex items-start gap-2.5">
-                <span className="text-indigo-400 font-bold">INFO:</span>
-                <div>
-                  يتم إرسال نسخة من كل فاتورة تلقائياً إلى بريدك الإلكتروني
-                  المسجل. إذا واجهت أي مشاكل في الفوترة، يرجى الاتصال بالدعم
-                  الفني المخصص.
-                  <br />
-                  Invoices are automatically dispatched to your registered
-                  email. For any issues, contact support.
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Action buttons (Profile Tab has update button, Subscription Tab has a close button which auto-saves) */}
+          {/* Action buttons (Profile, System, and Secrets Tabs) */}
           <div className="flex gap-3 pt-4 border-t border-white/5 bg-black/40 -mx-6 -mb-6 p-6">
             <button
               type="submit"
@@ -4666,15 +3998,13 @@ export default function App() {
   }, [posts.length]);
   const [isComposerOpen, setIsComposerOpen] = useState(false);
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [editProfileTab, setEditProfileTab] = useState<
-    "profile" | "subscription" | "billing"
-  >("profile");
+  const [editProfileTab, setEditProfileTab] = useState<"profile">("profile");
   const [isEditPostOpen, setIsEditPostOpen] = useState(false);
   const [isDataVaultOpen, setIsDataVaultOpen] = useState(false);
   const [isVoiceSettingsOpen, setIsVoiceSettingsOpen] = useState(false);
 
   const openEditProfile = (
-    tab: "profile" | "subscription" | "billing" = "profile",
+    tab: "profile" = "profile",
   ) => {
     setEditProfileTab(tab);
     setIsEditProfileOpen(true);
@@ -4966,6 +4296,20 @@ export default function App() {
   };
 
   const [showConsole, setShowConsole] = useState(false);
+  // Vexora AI "Soon" Notification State (displays for 5 seconds upon click)
+  const [showVexoraAiSoon, setShowVexoraAiSoon] = useState(false);
+  const vexoraAiSoonTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleVexoraAiClick = () => {
+    if (vexoraAiSoonTimeoutRef.current) {
+      clearTimeout(vexoraAiSoonTimeoutRef.current);
+    }
+    setShowVexoraAiSoon(true);
+    vexoraAiSoonTimeoutRef.current = setTimeout(() => {
+      setShowVexoraAiSoon(false);
+    }, 5000);
+  };
+
   const [currentView, setCurrentView] = useState<
     | "feed"
     | "friends"
@@ -6298,9 +5642,245 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Vexora AI "Soon" 5-Second Animated Alert Banner */}
+      <AnimatePresence>
+        {showVexoraAiSoon && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.92 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -30, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 450, damping: 28 }}
+            className="fixed top-6 left-1/2 -translate-x-1/2 z-[9999] w-[92vw] max-w-md pointer-events-auto"
+          >
+            <div className="relative overflow-hidden bg-zinc-950/95 border-2 border-purple-500/80 rounded-2xl p-4 sm:p-5 shadow-[0_0_50px_rgba(168,85,247,0.55)] backdrop-blur-2xl text-white">
+              {/* Animated subtle background glow */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/25 via-pink-600/20 to-indigo-600/25 pointer-events-none" />
+
+              <div className="relative flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3.5">
+                  <div className="relative flex-shrink-0">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 via-indigo-600 to-purple-700 flex items-center justify-center text-white shadow-[0_0_20px_rgba(168,85,247,0.6)]">
+                      <Bot className="w-7 h-7 animate-bounce" />
+                    </div>
+                    <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-black animate-ping" />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl sm:text-3xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-pink-200 to-amber-200 drop-shadow">
+                        Soon
+                      </span>
+                      <span className="px-2 py-0.5 rounded-md bg-purple-500/25 border border-purple-500/50 text-[10px] font-mono font-bold text-purple-300 uppercase tracking-widest">
+                        Vexora AI
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-300 font-medium mt-0.5">
+                      {language === "ar"
+                        ? "ميزة Vexora AI قادمة قريباً جداً، جاري تجهيزها! ✨"
+                        : "Vexora AI is coming soon! Stay tuned ✨"}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowVexoraAiSoon(false)}
+                  className="text-zinc-400 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition-colors flex-shrink-0 cursor-pointer"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* 5-second animated progress line */}
+              <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/10 overflow-hidden">
+                <motion.div
+                  initial={{ width: "100%" }}
+                  animate={{ width: "0%" }}
+                  transition={{ duration: 5, ease: "linear" }}
+                  className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400 shadow-[0_0_10px_rgba(168,85,247,0.8)]"
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Sleek Modern Futuristic Top Header with Vexora Network Brand & Logo */}
+      <header
+        id="vexora-main-header"
+        className="w-full border-b border-white/5 bg-[#0a0d14]/85 backdrop-blur-2xl px-4 sm:px-6 py-3 flex items-center justify-between z-30 shrink-0 select-none shadow-[0_4px_30px_rgba(0,0,0,0.6)]"
+      >
+        {/* Brand Identity: Modern Logo + Vexora Network */}
+        <div
+          id="vexora-brand-link"
+          onClick={() => {
+            setActiveGrid("public");
+            setCurrentView("feed");
+            setSelectedProfileId(null);
+          }}
+          className="flex items-center gap-3 cursor-pointer group"
+          title="Vexora Network - Neural Social Grid"
+        >
+          {/* Logo container with multi-layer neon cyber glow & subtle entry animation on sign-in */}
+          <motion.div
+            key={currentUser?.id || "guest-logo"}
+            initial={{ opacity: 0, scale: 0.85 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+              duration: 0.6,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className="relative flex-shrink-0"
+          >
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl p-[1.5px] bg-gradient-to-tr from-cyan-400 via-purple-600 to-indigo-500 shadow-[0_0_25px_rgba(6,182,212,0.4)] group-hover:shadow-[0_0_35px_rgba(6,182,212,0.7)] group-hover:scale-105 transition-all duration-300">
+              <div className="w-full h-full rounded-[14px] overflow-hidden bg-black/95 flex items-center justify-center relative">
+                <img
+                  src="/vexora-logo.jpg"
+                  alt="Vexora Network Logo"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/10 via-transparent to-purple-500/15 pointer-events-none" />
+              </div>
+            </div>
+            {/* Live pulsating neural status badge */}
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-black animate-pulse" />
+          </motion.div>
+
+          {/* Futuristic Typographic Wordmark */}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="text-base sm:text-lg font-black tracking-[0.25em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-purple-200 drop-shadow-[0_0_15px_rgba(255,255,255,0.25)] font-sans">
+                VEXORA
+              </span>
+              <span className="px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 uppercase tracking-widest hidden xs:inline-block shadow-[0_0_10px_rgba(6,182,212,0.25)]">
+                NETWORK
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 -mt-0.5">
+              <span className="text-[9px] font-mono tracking-[0.35em] text-cyan-400/90 font-bold uppercase xs:hidden">
+                NETWORK
+              </span>
+              <span className="text-[8px] font-mono text-zinc-400 uppercase tracking-wider hidden xs:inline">
+                {language === "ar" ? "الشبكة اللامركزية الذكية" : "DECENTRALIZED NEURAL GRID"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Center: Live Grid Status Pill (visible on medium & large screens) */}
+        <div className="hidden md:flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/[0.03] border border-white/5 backdrop-blur-md shadow-inner">
+          <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+            <span className="font-bold uppercase tracking-wider text-zinc-400">
+              {language === "ar" ? "العقد المتصلة" : "Active Nodes"}:
+            </span>
+            <span className="text-cyan-400 font-black tracking-widest">
+              {Object.keys(posts).length + 42}
+            </span>
+          </div>
+          <span className="w-px h-3 bg-white/10" />
+          <div className="flex items-center gap-1.5 text-[9px] font-mono text-purple-300 uppercase tracking-wider font-semibold">
+            <Sparkles className="w-3 h-3 text-purple-400" />
+            <span>{language === "ar" ? "مشفر وآمن" : "Encrypted Grid"}</span>
+          </div>
+        </div>
+
+        {/* Right Controls: Language, Sound, Owner Command & Profile */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Language Switcher */}
+          <button
+            id="header-language-toggle"
+            type="button"
+            onClick={toggleLanguage}
+            className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-mono font-bold text-zinc-300 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-sm"
+            title={language === "ar" ? "Switch to English" : "التبديل إلى العربية"}
+          >
+            <Globe className="w-3.5 h-3.5 text-cyan-400" />
+            <span>{language === "ar" ? "EN" : "العربية"}</span>
+          </button>
+
+          {/* Sound & Audio Settings */}
+          <button
+            id="header-voice-btn"
+            type="button"
+            onClick={() => setIsVoiceSettingsOpen(true)}
+            className="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-zinc-400 hover:text-cyan-300 transition-all cursor-pointer active:scale-95 shadow-sm"
+            title={language === "ar" ? "إعدادات الصوت" : "Audio Settings"}
+          >
+            <Volume2 className="w-4 h-4" />
+          </button>
+
+          {/* Owner Quick Button (if owner) */}
+          {isOwner && (
+            <button
+              type="button"
+              onClick={() => setShowConsole(true)}
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/20 via-purple-600/20 to-indigo-600/20 hover:from-amber-500/30 hover:to-indigo-500/30 border border-amber-500/40 text-amber-300 text-[10px] font-mono font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+              title={language === "ar" ? "لوحة المالك" : "Owner Console"}
+            >
+              <Crown className="w-3.5 h-3.5 text-yellow-300 animate-pulse" />
+              <span>{language === "ar" ? "المالك" : "Owner"}</span>
+            </button>
+          )}
+
+          {/* User Profile Avatar / Sign In */}
+          {currentUser ? (
+            <button
+              id="header-user-profile-btn"
+              type="button"
+              onClick={() => {
+                setSelectedProfileId(null);
+                setCurrentView("my-account");
+              }}
+              className="flex items-center gap-2 pl-1 cursor-pointer group"
+              title={currentUser.name}
+            >
+              <div className="w-9 h-9 rounded-xl overflow-hidden border border-purple-500/40 p-0.5 bg-black/60 group-hover:border-cyan-400 transition-colors shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name}
+                  className="w-full h-full object-cover rounded-[8px]"
+                />
+              </div>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setAuthMode("login")}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-bold text-[10px] uppercase tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] active:scale-95 cursor-pointer"
+            >
+              {language === "ar" ? "دخول" : "Sign In"}
+            </button>
+          )}
+        </div>
+      </header>
+
       <div className="flex flex-1 p-4 overflow-hidden relative">
         {/* Minimal Tool Dock */}
         <aside className="w-20 hidden xl:flex flex-col items-center py-6 gap-3.5 glass rounded-3xl ml-4">
+          {/* Logo Mark at the top of the sidebar */}
+          <div
+            onClick={() => {
+              setActiveGrid("public");
+              setCurrentView("feed");
+              setSelectedProfileId(null);
+            }}
+            className="w-12 h-12 rounded-2xl p-[1.5px] bg-gradient-to-tr from-cyan-400 via-purple-600 to-indigo-500 shadow-[0_0_20px_rgba(6,182,212,0.35)] hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] hover:scale-105 transition-all cursor-pointer mb-2 flex-shrink-0"
+            title="Vexora Network"
+          >
+            <div className="w-full h-full rounded-[14px] overflow-hidden bg-black/95 flex items-center justify-center relative">
+              <img
+                src="/vexora-logo.jpg"
+                alt="Vexora Network Logo"
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+          </div>
+          <div className="w-8 h-px bg-white/10 mb-1" />
+
           {/* 1 - Public */}
           <DockItem
             icon={<Globe className="w-6 h-6 outline-none" />}
@@ -6326,15 +5906,12 @@ export default function App() {
             }}
             label={language === "ar" ? "2. الرسائل" : "2. Message"}
           />
-          {/* 3 - AI Chat */}
+          {/* 3 - Vexora AI */}
           <DockItem
             icon={<Bot className="w-6 h-6 outline-none" />}
-            active={currentView === "terminal"}
-            onClick={() => {
-              setCurrentView("terminal");
-              setSelectedProfileId(null);
-            }}
-            label={language === "ar" ? "3. الدردشة الذكية" : "3. AI Chat"}
+            active={showVexoraAiSoon}
+            onClick={handleVexoraAiClick}
+            label={language === "ar" ? "3. Vexora AI" : "3. Vexora AI"}
           />
           {/* 4 - COMMUNITY */}
           <DockItem
@@ -6367,23 +5944,6 @@ export default function App() {
             label={language === "ar" ? "6. حسابي" : "6. My Account"}
           />
           <div className="w-8 h-px bg-white/10 my-1" />
-
-          {/* Go Premium / Vexora Plus Sidebar Action */}
-          <div className="relative group">
-            <button
-              type="button"
-              onClick={() => openEditProfile("subscription")}
-              className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all bg-gradient-to-tr from-amber-500 via-purple-600 to-indigo-600 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] hover:scale-110 active:scale-95 cursor-pointer relative overflow-hidden"
-              title="Vexora Plus 👑"
-            >
-              <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
-              <Crown className="w-5 h-5 text-yellow-200 animate-pulse" />
-            </button>
-            <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-2.5 py-1.5 glass rounded-xl text-[9px] uppercase tracking-widest font-black opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap text-amber-300 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.15)] flex items-center gap-1.5">
-              <span>Go Premium</span>{" "}
-              <span className="text-yellow-400">👑</span>
-            </div>
-          </div>
 
           {/* Owner Command Center Sidebar Action */}
           {isOwner && (
@@ -6511,7 +6071,6 @@ export default function App() {
                   initialChatUserId={initialChatUserId}
                   language={language}
                   onProfileClick={handleProfileClick}
-                  onOpenPremium={() => openEditProfile("subscription")}
                   activeCall={activeCall}
                   setActiveCall={setActiveCall}
                   isCallMinimized={isCallMinimized}
@@ -8305,23 +7864,20 @@ export default function App() {
             </span>
           </button>
 
-          {/* 3 - AI Chat */}
+          {/* 3 - Vexora AI */}
           <button
             id="mobile-nav-ai-chat"
             type="button"
-            onClick={() => {
-              setCurrentView("terminal");
-              setSelectedProfileId(null);
-            }}
+            onClick={handleVexoraAiClick}
             className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-              currentView === "terminal"
+              showVexoraAiSoon
                 ? "text-purple-400 bg-purple-500/20 font-bold shadow-[inset_0_0_10px_rgba(168,85,247,0.3)] ring-1 ring-purple-500/30"
                 : "text-white/50 hover:text-white hover:bg-white/5"
             }`}
           >
             <Bot className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span className="text-[9px] sm:text-[10px] font-mono tracking-wider">
-              {language === "ar" ? "الذكاء" : "AI Chat"}
+              Vexora AI
             </span>
           </button>
 
@@ -8481,7 +8037,7 @@ function ProfileGrid({
   ) => void;
   onAddComment: (postId: string, text: string) => void;
   onProfileClick: (author: string) => void;
-  onEditProfile?: (tab?: "profile" | "subscription" | "billing") => void;
+  onEditProfile?: (tab?: "profile") => void;
   onSendFriendRequest?: (profile: UserProfile) => void;
   onToggleFollow?: (profile: UserProfile) => void;
   onDeleteAccount?: (userProfileId: string) => void;
@@ -8722,13 +8278,6 @@ function ProfileGrid({
                     <span>
                       {language === "ar" ? "تعديل الحساب" : "Edit Profile"}
                     </span>
-                  </button>
-                  <button
-                    onClick={() => onEditProfile?.("subscription")}
-                    className="h-12 px-6 font-black uppercase tracking-[0.12em] text-[10px] rounded-2xl transition-all active:scale-95 flex items-center gap-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white shadow-[0_0_30px_rgba(168,85,247,0.35)] hover:shadow-[0_0_45px_rgba(168,85,247,0.6)] border border-purple-500/40 cursor-pointer select-none"
-                  >
-                    <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
-                    <span>👑 Vexora Plus</span>
                   </button>
                   {onSignOut && (
                     <button
@@ -9442,6 +8991,8 @@ function AuthOverlay({
   const [birthDate, setBirthDate] = useState(""); // Birth Date
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeAuthTab, setActiveAuthTab] = useState<"form" | "video">("form");
+  const [isInlineVideoOpen, setIsInlineVideoOpen] = useState(true);
 
   // OAuth Simulator States
   const [showSimulator, setShowSimulator] = useState(false);
@@ -9921,20 +9472,76 @@ function AuthOverlay({
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-lg flux-card p-8 md:p-10 bg-white/5 border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.8)] my-8 relative"
+        className="w-full max-w-xl sm:max-w-2xl flux-card p-6 sm:p-8 md:p-10 bg-zinc-950/95 border-white/10 shadow-[0_0_150px_rgba(0,0,0,0.8)] my-8 relative"
       >
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center text-black font-black text-3xl mb-3 shadow-xl select-none">
-            V
+        <div className="flex flex-col items-center mb-5">
+          <div className="relative mb-3">
+            <div className="w-20 h-20 rounded-3xl p-[2px] bg-gradient-to-tr from-cyan-400 via-purple-600 to-indigo-500 shadow-[0_0_35px_rgba(6,182,212,0.5)]">
+              <div className="w-full h-full rounded-[22px] overflow-hidden bg-black/95 flex items-center justify-center relative">
+                <img
+                  src="/vexora-logo.jpg"
+                  alt="Vexora Network Logo"
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </div>
+            </div>
+            <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-400 border-2 border-black animate-pulse" />
           </div>
-          <h2 className="text-3xl font-black tracking-tightest uppercase text-white">
-            Vexora Bridge
+          <h2 className="text-2xl sm:text-3xl font-black tracking-[0.2em] uppercase text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-100 to-purple-200">
+            Vexora Network
           </h2>
-          <p className="text-white/40 text-[10px] font-mono tracking-[0.3em] uppercase mt-1">
+          <p className="text-cyan-400/80 text-[10px] font-mono tracking-[0.3em] uppercase mt-1 font-bold">
             {language === "ar"
               ? "بوابة تسجيل الدخول والربط الشبكي"
-              : "Node Identity Verification"}
+              : "Decentralized Neural Matrix"}
           </p>
+        </div>
+
+        {/* Top Navigation Tabs: Login, Register, and Video Promo */}
+        <div className="grid grid-cols-3 gap-1.5 p-1 bg-black/60 rounded-2xl border border-white/10 mb-5">
+          <button
+            type="button"
+            onClick={() => {
+              setMode("login");
+              setActiveAuthTab("form");
+            }}
+            className={`py-2 rounded-xl text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeAuthTab === "form" && mode === "login"
+                ? "bg-purple-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                : "text-zinc-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <span>{language === "ar" ? "🔑 دخول" : "Sign In"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setMode("register");
+              setActiveAuthTab("form");
+            }}
+            className={`py-2 rounded-xl text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeAuthTab === "form" && mode === "register"
+                ? "bg-purple-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+                : "text-zinc-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <span>{language === "ar" ? "✨ حساب جديد" : "Register"}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveAuthTab("video")}
+            className={`py-2 rounded-xl text-[10px] sm:text-[11px] font-mono font-bold tracking-wider uppercase transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              activeAuthTab === "video"
+                ? "bg-gradient-to-r from-cyan-600 to-purple-600 text-white shadow-[0_0_20px_rgba(6,182,212,0.4)]"
+                : "text-cyan-300 hover:text-white hover:bg-cyan-500/10"
+            }`}
+          >
+            <Film className="w-3.5 h-3.5 text-cyan-400" />
+            <span>{language === "ar" ? "🎬 فيديو المنصة" : "Video"}</span>
+          </button>
         </div>
 
         {error && (
@@ -9943,7 +9550,64 @@ function AuthOverlay({
           </div>
         )}
 
-        {mode === "login" ? (
+        {/* Tab 1: Full Video Showcase Tab */}
+        {activeAuthTab === "video" ? (
+          <div className="space-y-4 animate-in fade-in duration-300">
+            <VexoraPromoVideoPlayer
+              language={language}
+              compact={false}
+              autoPlay={true}
+              onOpenRegister={() => {
+                setActiveAuthTab("form");
+                setMode("register");
+              }}
+              onOpenLogin={() => {
+                setActiveAuthTab("form");
+                setMode("login");
+              }}
+            />
+          </div>
+        ) : (
+          <>
+            {/* Inline Video Player embedded right above Login / Register form */}
+            <div className="mb-5 overflow-hidden rounded-2xl border border-cyan-500/30 bg-black/60 shadow-[0_0_25px_rgba(6,182,212,0.15)]">
+              <div
+                onClick={() => setIsInlineVideoOpen(!isInlineVideoOpen)}
+                className="px-3.5 py-2 bg-gradient-to-r from-cyan-950/40 via-purple-950/30 to-black/60 border-b border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors select-none"
+              >
+                <div className="flex items-center gap-2">
+                  <Film className="w-3.5 h-3.5 text-cyan-400" />
+                  <span className="text-[11px] font-bold text-white font-sans">
+                    {language === "ar"
+                      ? "فيديو شبكة Vexora الرسمي (Vexora_Network_Ad.mp4)"
+                      : "Official Vexora Video (Vexora_Network_Ad.mp4)"}
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                    MP4
+                  </span>
+                </div>
+                <span className="text-[9px] font-mono text-cyan-400 hover:underline">
+                  {isInlineVideoOpen
+                    ? language === "ar"
+                      ? "إخفاء الفيديو ▲"
+                      : "Collapse ▲"
+                    : language === "ar"
+                      ? "تشغيل الفيديو ▼"
+                      : "Expand & Play ▼"}
+                </span>
+              </div>
+              {isInlineVideoOpen && (
+                <div className="p-2 sm:p-2.5">
+                  <VexoraPromoVideoPlayer
+                    language={language}
+                    compact={true}
+                    autoPlay={true}
+                  />
+                </div>
+              )}
+            </div>
+
+            {mode === "login" ? (
           <div className="space-y-6">
             {/* Quick Preset Node Login */}
             <div className="p-3 bg-white/[0.03] border border-white/10 rounded-2xl space-y-2">
@@ -10869,6 +10533,8 @@ function AuthOverlay({
               </div>
             </div>
           </div>
+        )}
+        </>
         )}
 
         <button
@@ -13607,7 +13273,6 @@ function VexoraMessenger({
   initialChatUserId,
   language = "en",
   onProfileClick,
-  onOpenPremium,
   activeCall,
   setActiveCall,
   isCallMinimized,
@@ -13620,7 +13285,6 @@ function VexoraMessenger({
   initialChatUserId?: string | null;
   language?: "en" | "ar";
   onProfileClick: (name: string) => void;
-  onOpenPremium?: () => void;
   activeCall: {
     type: "voice" | "video";
     status: "calling" | "incoming" | "connected";
@@ -14178,36 +13842,6 @@ function VexoraMessenger({
               </div>
             </div>
           )}
-
-          {/* Go Premium Sidebar Banner */}
-          <button
-            type="button"
-            onClick={onOpenPremium}
-            className="w-full p-4 rounded-2xl bg-gradient-to-r from-purple-950/40 via-indigo-950/40 to-purple-950/40 hover:from-purple-900/50 hover:to-indigo-900/50 border border-purple-500/35 hover:border-purple-400/60 transition-all flex items-center justify-between group cursor-pointer relative overflow-hidden shadow-[0_0_20px_rgba(168,85,247,0.15)] active:scale-[0.98]"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-purple-500/5 to-transparent opacity-40 blur-xl group-hover:opacity-70 transition-opacity" />
-
-            <div className="flex items-center gap-3 relative z-10">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 via-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(245,158,11,0.3)] group-hover:scale-110 transition-transform">
-                <Crown className="w-4 h-4 text-white animate-pulse" />
-              </div>
-              <div className="flex flex-col items-start text-left">
-                <span className="text-[10px] font-black uppercase tracking-widest text-white flex items-center gap-1">
-                  Vexora Plus 👑
-                </span>
-                <span className="text-[7.5px] font-mono text-zinc-400 uppercase tracking-widest mt-0.5">
-                  {language === "ar"
-                    ? "أدوات الاتصال الفائقة"
-                    : "Unlock Pro Neural Tools"}
-                </span>
-              </div>
-            </div>
-
-            <span className="text-[8.5px] font-mono text-purple-400 font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform flex items-center gap-1 bg-purple-500/10 px-2 py-1 rounded-lg border border-purple-500/20 relative z-10">
-              {language === "ar" ? "ترقية" : "UPGRADE"}{" "}
-              <span className="text-amber-400">⚡</span>
-            </span>
-          </button>
 
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/20" />
